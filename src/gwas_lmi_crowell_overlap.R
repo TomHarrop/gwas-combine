@@ -23,7 +23,30 @@ gwas.lmi.long <- gwas.lmi[, .(
 ), by = .(Chr, Start, End, Trait, Place, Group, bin.name)]
 gwas.lmi.long[, c("Start", "End") := NULL]
 
+rutils::GenerateMessage("Sorting intermediate table")
+setkey(gwas.lmi.long, Chr, position)
+
 rutils::GenerateMessage("Grouping LMI regions by Chr and position")
+
+system.time(
+  gwas.long.tmp <- gwas.lmi.long[Chr == 1, .(
+    trait = list(unique(Trait)),
+    subpop = list(unique(Group))
+  ), by = .(Chr, position)]
+)
+
+system.time(
+  gwas.long.dp <- gwas.lmi.long %>%
+    filter(Chr == 1) %>%
+    group_by(Chr, position) %>%
+    summarise(
+      trait = paste0(unique(Trait, collapse = " ")),
+      subpop = paste0(unique(Group, collapse = " "))
+    )
+)
+
+gwas.lmi.long[Chr == 1, length(unique(position))]
+
 lmi.regions <- gwas.lmi.long[, .(
   lmi.trait = paste0(unique(Trait), collapse = " "),
   lmi.subpop = paste0(unique(Group), collapse = " "),
