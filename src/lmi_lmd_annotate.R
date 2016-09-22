@@ -18,29 +18,33 @@ lrt.p <- unique(lrt.res[, .(gene, padj)])
 
 # combine padj and tpm
 lrt.tpm.p <- lrt.p[lrt.tpm]
-setkey(lrt.tpm.p, gene)
+
 
 # merge tpm with gwas results
-gwas.lmi.genes <- readRDS("data/gwas_lmi_genes.Rds")
-gwas.lmi.genes[, c("bin.name", "region.name", "gene.bin") := NULL]
-gwas.lmi.genes <- gwas.lmi.genes[!is.na(gene)]
-setkey(gwas.lmi.genes, gene)
-lmi.lmd <- lrt.tpm.p[gwas.lmi.genes]
+disjoint.genes <- readRDS("output/regions_with_genes.Rds")
+setkey(disjoint.genes, gene)
+setkey(lrt.tpm.p, gene)
+
+gwas.lmd <- lrt.tpm.p[disjoint.genes]
 
 # add annotations
-annot <- lmi.lmd[, data.table(oryzr::LocToGeneName(unique(gene)),
+annot <- gwas.lmd[, data.table(oryzr::LocToGeneName(unique(gene)),
                               keep.rownames = TRUE, key = "rn")]
 setnames(annot, "rn", "gene")
-lmi.lmd.annot <- annot[lmi.lmd]
+gwas.lmd.annot <- annot[gwas.lmd]
 sdc <- c("n1r1", "n1r3", "n1r4", "n2r1", "n2r3", "n2r4", "n3r1", "n3r2",
          "n3r3", "n4r1", "n4r2", "n4r3")
-lmi.lmd.annot[, chuck := all(is.na(.SD)), .SDcols = sdc, by = gene]
-lmi.lmd.annot <- lmi.lmd.annot[!chuck == TRUE]
-lmi.lmd.annot[, chuck := NULL]
+gwas.lmd.annot[, chuck := all(is.na(.SD)), .SDcols = sdc, by = gene]
+gwas.lmd.annot <- gwas.lmd.annot[!chuck == TRUE]
+gwas.lmd.annot[, chuck := NULL]
+
+------
+
 setcolorder(lmi.lmd.annot, c("gene", "symbols", "names", "padj",
                              "MsuAnnotation", "n1r1", "n1r3", "n1r4", "n2r1",
                              "n2r3", "n2r4", "n3r1", "n3r2", "n3r3", "n4r1",
-                             "n4r2", "n4r3", "Chr", "Start", "End", "Trait",
+                             "n4r2", "n4r3",
+                             "Chr", "Start", "End", "Trait",
                              "Place", "Group", "RapID", "OgroObjective",
                              "OgroRef"))
 

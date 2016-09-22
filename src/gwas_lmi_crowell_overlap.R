@@ -84,9 +84,9 @@ gwas.lmi <- readRDS(gwas.lmi.file)
 gwas.crowell.file <- "data/gwas_crowell_genes.Rds"
 gwas.crowell <- readRDS(gwas.crowell.file)
 
-####################################
-# 1. `reduce` OVERLAPS IN LMI DATA #
-####################################
+#####################################
+# 1. `disjoin` OVERLAPS IN LMI DATA #
+#####################################
 
 # format lmi data for GRanges
 gwas.lmi <- gwas.lmi[, .(
